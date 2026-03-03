@@ -1,0 +1,40 @@
+[project]
+name = "full-doc-to-md"
+version = "0.1.0"
+description = "Recursively crawl documentation sites and output as Markdown"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "httpx>=0.28.0",
+    "beautifulsoup4>=4.12.0",
+    "markdownify>=0.13.0",
+    "playwright>=1.49.0",
+    "pydantic>=2.10.0",
+    "sse-starlette>=2.1.0",
+    "lxml>=5.3.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "httpx>=0.28.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-v --cov=. --cov-report=term-missing"
+
+[tool.coverage.run]
+omit = ["tests/*", "main.py", ".venv/*"]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "vulture>=2.14",
+]
