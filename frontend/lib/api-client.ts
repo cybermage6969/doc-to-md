@@ -1,5 +1,5 @@
 /**
- * API client for the full-doc-to-md backend.
+ * API client for the deepcrawl2md backend.
  */
 
 import { API_BASE_URL } from "@/lib/constants";

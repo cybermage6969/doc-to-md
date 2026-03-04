@@ -1,10 +1,8 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #fafafa;
+  --color-background: #ffffff;
   --color-foreground: #0f172a;
-  --color-primary: #4f46e5;
-  --color-primary-hover: #4338ca;
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }

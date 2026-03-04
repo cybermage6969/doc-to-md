@@ -1,6 +1,7 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { DownloadSection } from "@/components/download-section";
+import { renderWithProviders } from "@/__tests__/test-utils";
 
 jest.mock("@/lib/url-utils", () => ({
   isSafeDownloadUrl: (url: string) => url.startsWith("http://localhost:8000/"),
@@ -15,41 +16,41 @@ describe("DownloadSection", () => {
   };
 
   it("renders markdown download link", () => {
-    render(<DownloadSection {...defaultProps} />);
+    renderWithProviders(<DownloadSection {...defaultProps} />);
     expect(
-      screen.getByRole("link", { name: /Download .md/ })
+      screen.getByRole("link", { name: /下载 .md/ })
     ).toBeInTheDocument();
   });
 
   it("renders zip download link", () => {
-    render(<DownloadSection {...defaultProps} />);
+    renderWithProviders(<DownloadSection {...defaultProps} />);
     expect(
-      screen.getByRole("link", { name: /Download .zip/ })
+      screen.getByRole("link", { name: /下载 .zip/ })
     ).toBeInTheDocument();
   });
 
   it("displays formatted token count in K", () => {
-    render(<DownloadSection {...defaultProps} />);
+    renderWithProviders(<DownloadSection {...defaultProps} />);
     expect(screen.getByText(/50\.0K/)).toBeInTheDocument();
   });
 
   it("shows Recommended badge when tokens exceed 100K", () => {
-    render(<DownloadSection {...defaultProps} estimatedTokens={150000} />);
-    expect(screen.getByText("Recommended")).toBeInTheDocument();
+    renderWithProviders(<DownloadSection {...defaultProps} estimatedTokens={150000} />);
+    expect(screen.getByText("推荐")).toBeInTheDocument();
   });
 
   it("does not show Recommended badge when tokens are under 100K", () => {
-    render(<DownloadSection {...defaultProps} />);
-    expect(screen.queryByText("Recommended")).not.toBeInTheDocument();
+    renderWithProviders(<DownloadSection {...defaultProps} />);
+    expect(screen.queryByText("推荐")).not.toBeInTheDocument();
   });
 
   it("formats millions correctly", () => {
-    render(<DownloadSection {...defaultProps} estimatedTokens={1500000} />);
+    renderWithProviders(<DownloadSection {...defaultProps} estimatedTokens={1500000} />);
     expect(screen.getByText(/1\.5M/)).toBeInTheDocument();
   });
 
   it("renders disabled buttons when URLs are null", () => {
-    render(
+    renderWithProviders(
       <DownloadSection
         downloadUrl={null}
         downloadZipUrl={null}
@@ -62,7 +63,7 @@ describe("DownloadSection", () => {
   });
 
   it("does not show token summary when estimatedTokens is null", () => {
-    render(
+    renderWithProviders(
       <DownloadSection
         downloadUrl={defaultProps.downloadUrl}
         downloadZipUrl={defaultProps.downloadZipUrl}
@@ -70,14 +71,13 @@ describe("DownloadSection", () => {
         zipParts={null}
       />
     );
-    // The total token summary should not appear (card descriptions may mention "tokens")
-    expect(screen.queryByText("Total")).not.toBeInTheDocument();
+    expect(screen.queryByText("合计")).not.toBeInTheDocument();
   });
 
   it("shows card descriptions for both download types", () => {
-    render(<DownloadSection {...defaultProps} />);
-    expect(screen.getByText(/single file/i)).toBeInTheDocument();
-    expect(screen.getByText(/Feed each part/i)).toBeInTheDocument();
+    renderWithProviders(<DownloadSection {...defaultProps} />);
+    expect(screen.getByText(/合并为单个文件/)).toBeInTheDocument();
+    expect(screen.getByText(/分批发送给 LLM/)).toBeInTheDocument();
   });
 
   describe("ZIP parts preview", () => {
@@ -85,7 +85,7 @@ describe("DownloadSection", () => {
       const zipParts = [
         { filename: "full.md", page_count: 5, estimated_tokens: 45000 },
       ];
-      render(<DownloadSection {...defaultProps} zipParts={zipParts} />);
+      renderWithProviders(<DownloadSection {...defaultProps} zipParts={zipParts} />);
       expect(screen.getByText("full.md")).toBeInTheDocument();
       expect(screen.getByText(/45\.0K tokens/)).toBeInTheDocument();
     });
@@ -96,7 +96,7 @@ describe("DownloadSection", () => {
         { filename: "part-002.md", page_count: 8, estimated_tokens: 72000 },
         { filename: "part-003.md", page_count: 3, estimated_tokens: 15000 },
       ];
-      render(
+      renderWithProviders(
         <DownloadSection
           {...defaultProps}
           estimatedTokens={165000}
@@ -112,14 +112,32 @@ describe("DownloadSection", () => {
     });
 
     it("does not show parts preview when zipParts is null", () => {
-      render(<DownloadSection {...defaultProps} zipParts={null} />);
+      renderWithProviders(<DownloadSection {...defaultProps} zipParts={null} />);
       expect(screen.queryByText("full.md")).not.toBeInTheDocument();
       expect(screen.queryByText(/part-/)).not.toBeInTheDocument();
     });
 
     it("does not show parts preview when zipParts is empty", () => {
-      render(<DownloadSection {...defaultProps} zipParts={[]} />);
+      renderWithProviders(<DownloadSection {...defaultProps} zipParts={[]} />);
       expect(screen.queryByText("full.md")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("i18n: English locale", () => {
+    it("renders English labels", () => {
+      renderWithProviders(<DownloadSection {...defaultProps} />, { locale: "en" });
+      expect(screen.getByRole("link", { name: /Download .md/ })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /Download .zip/ })).toBeInTheDocument();
+      expect(screen.getByText("Total")).toBeInTheDocument();
+      expect(screen.getByText(/single file/i)).toBeInTheDocument();
+    });
+
+    it("shows Recommended in English when large", () => {
+      renderWithProviders(
+        <DownloadSection {...defaultProps} estimatedTokens={150000} />,
+        { locale: "en" },
+      );
+      expect(screen.getByText("Recommended")).toBeInTheDocument();
     });
   });
 });

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { getProgressUrl, getTask } from "@/lib/api-client";
+import { useLocale } from "@/i18n";
 import { API_BASE_URL } from "@/lib/constants";
 import type { ProgressEvent, CrawlProgress } from "@/types";
 
@@ -34,6 +35,9 @@ interface UseSSEProgressReturn {
  * @param taskId - Task ID to subscribe to, or null to disconnect.
  */
 export function useSSEProgress(taskId: string | null): UseSSEProgressReturn {
+  const { t } = useLocale();
+  const tRef = useRef(t);
+  tRef.current = t;
   const [progress, setProgress] = useState<CrawlProgress>(DEFAULT_PROGRESS);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -178,7 +182,7 @@ export function useSSEProgress(taskId: string | null): UseSSEProgressReturn {
       // EventSource auto-reconnects; wait before surfacing the error to the user
       if (!disconnectTimerRef.current) {
         disconnectTimerRef.current = setTimeout(() => {
-          setError("Connection to progress stream failed");
+          setError(tRef.current("connectionFailed"));
           disconnectTimerRef.current = null;
         }, DISCONNECT_ERROR_DELAY_MS);
       }

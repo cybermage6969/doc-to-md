@@ -1,3 +1,6 @@
+"use client";
+
+import { useLocale } from "@/i18n";
 import { isSafeDownloadUrl } from "@/lib/url-utils";
 import { formatTokenCount } from "@/lib/format-utils";
 import type { CompletedTask } from "@/types";
@@ -25,25 +28,14 @@ const smallDownloadIcon = (
  * Renders nothing when the list is empty.
  */
 export function TaskHistory({ tasks }: TaskHistoryProps) {
+  const { t } = useLocale();
+
   if (tasks.length === 0) return null;
 
   return (
-    <section className="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm">
-      <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-500">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          className="h-4 w-4 text-slate-400"
-          aria-hidden="true"
-        >
-          <path
-            fillRule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z"
-            clipRule="evenodd"
-          />
-        </svg>
-        历史任务
+    <section className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/[0.06]">
+      <h2 className="mb-3 text-sm font-semibold text-slate-500">
+        {t("taskHistory")}
       </h2>
       <ul className="divide-y divide-slate-100">
         {tasks.toReversed().map((task) => (
@@ -84,7 +76,7 @@ export function TaskHistory({ tasks }: TaskHistoryProps) {
                 <a
                   href={task.downloadZipUrl}
                   download
-                  className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 transition-colors duration-200 hover:bg-indigo-100"
+                  className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors duration-200 hover:bg-slate-200"
                 >
                   {smallDownloadIcon}
                   ZIP

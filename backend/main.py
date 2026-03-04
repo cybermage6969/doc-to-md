@@ -25,8 +25,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Full Doc to Markdown",
-    description="Recursively crawl documentation sites and output as Markdown",
+    title="deepcrawl2md",
+    description="Crawl entire documentation sites into a single Markdown file, optimized for LLMs",
     version="0.1.0",
     lifespan=lifespan,
 )

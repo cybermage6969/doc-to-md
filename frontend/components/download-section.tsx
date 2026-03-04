@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale } from "@/i18n";
 import { isSafeDownloadUrl } from "@/lib/url-utils";
 import { formatTokenCount } from "@/lib/format-utils";
 import type { ZipPartInfo } from "@/types";
@@ -51,6 +52,7 @@ export function DownloadSection({
   estimatedTokens,
   zipParts,
 }: DownloadSectionProps) {
+  const { t } = useLocale();
   const hasMdUrl = downloadUrl != null && isSafeDownloadUrl(downloadUrl);
   const hasZipUrl = downloadZipUrl != null && isSafeDownloadUrl(downloadZipUrl);
   const isLarge = estimatedTokens != null && estimatedTokens > LARGE_TOKEN_THRESHOLD;
@@ -60,23 +62,23 @@ export function DownloadSection({
       {/* Token summary */}
       {estimatedTokens != null && (
         <div className="flex items-baseline gap-1.5">
-          <span className="text-sm text-slate-500">Total</span>
+          <span className="text-sm text-slate-500">{t("totalLabel")}</span>
           <span className="text-lg font-semibold text-slate-800">
             {formatTokenCount(estimatedTokens)}
           </span>
-          <span className="text-sm text-slate-500">tokens</span>
+          <span className="text-sm text-slate-500">{t("tokensUnit")}</span>
         </div>
       )}
 
       {/* Download cards */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {/* Markdown card */}
-        <div className="flex flex-col rounded-xl border border-slate-200 bg-white p-4">
+        <div className="flex flex-col rounded-xl bg-white p-4 shadow-sm ring-1 ring-black/[0.06]">
           <div className="mb-1 text-sm font-semibold text-slate-800">
-            Markdown
+            {t("markdownCardTitle")}
           </div>
           <p className="mb-3 text-xs leading-relaxed text-slate-500">
-            All pages merged into a single file. Best for reading or full-text search.
+            {t("markdownCardDesc")}
           </p>
           <div className="mt-auto">
             {hasMdUrl ? (
@@ -86,14 +88,14 @@ export function DownloadSection({
                 className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
               >
                 {downloadIcon}
-                Download .md
+                {t("downloadMd")}
               </a>
             ) : (
               <button
                 disabled
                 className="inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-400"
               >
-                Download .md
+                {t("downloadMd")}
               </button>
             )}
           </div>
@@ -101,24 +103,24 @@ export function DownloadSection({
 
         {/* ZIP card */}
         <div
-          className={`flex flex-col rounded-xl border p-4 ${
+          className={`flex flex-col rounded-xl p-4 shadow-sm ring-1 ring-black/[0.06] ${
             isLarge
-              ? "border-indigo-200 bg-indigo-50/30"
-              : "border-slate-200 bg-white"
+              ? "bg-slate-50"
+              : "bg-white"
           }`}
         >
           <div className="mb-1 flex items-center gap-2">
             <span className="text-sm font-semibold text-slate-800">
-              Split ZIP
+              {t("splitZipTitle")}
             </span>
             {isLarge && (
-              <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-medium text-indigo-600">
-                Recommended
+              <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+                {t("recommended")}
               </span>
             )}
           </div>
           <p className="mb-3 text-xs leading-relaxed text-slate-500">
-            Chunked by ~80K tokens per file. Feed each part to an LLM separately.
+            {t("splitZipDesc")}
           </p>
 
           {/* ZIP parts preview */}
@@ -148,17 +150,17 @@ export function DownloadSection({
               <a
                 href={downloadZipUrl}
                 download
-                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
               >
                 {downloadIcon}
-                Download .zip
+                {t("downloadZip")}
               </a>
             ) : (
               <button
                 disabled
                 className="inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-400"
               >
-                Download .zip
+                {t("downloadZip")}
               </button>
             )}
           </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale } from "@/i18n";
 import { isSafeDownloadUrl } from "@/lib/url-utils";
 
 interface DownloadButtonProps {
@@ -11,6 +12,8 @@ interface DownloadButtonProps {
  * Renders a disabled button when no URL is available.
  */
 export function DownloadButton({ downloadUrl }: DownloadButtonProps) {
+  const { t } = useLocale();
+
   if (downloadUrl && isSafeDownloadUrl(downloadUrl)) {
     return (
       <a
@@ -31,7 +34,7 @@ export function DownloadButton({ downloadUrl }: DownloadButtonProps) {
             clipRule="evenodd"
           />
         </svg>
-        下载 Markdown
+        {t("downloadMarkdown")}
       </a>
     );
   }
@@ -41,7 +44,7 @@ export function DownloadButton({ downloadUrl }: DownloadButtonProps) {
       disabled
       className="inline-flex cursor-not-allowed items-center gap-2 rounded-xl bg-slate-200 px-5 py-2.5 text-sm font-medium text-slate-400"
     >
-      下载 Markdown
+      {t("downloadMarkdown")}
     </button>
   );
 }

@@ -1,7 +1,7 @@
 [project]
-name = "full-doc-to-md"
+name = "deepcrawl2md"
 version = "0.1.0"
-description = "Recursively crawl documentation sites and output as Markdown"
+description = "Crawl entire documentation sites into a single Markdown file, optimized for LLMs"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115.0",

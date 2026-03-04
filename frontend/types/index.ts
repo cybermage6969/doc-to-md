@@ -1,5 +1,5 @@
 /**
- * Shared TypeScript types for the full-doc-to-md application.
+ * Shared TypeScript types for the deepcrawl2md application.
  */
 
 export type TaskStatus = "pending" | "running" | "completed" | "failed";

@@ -2,9 +2,10 @@
  * Tests for UrlInputForm component.
  */
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { UrlInputForm } from "@/components/url-input-form";
+import { renderWithProviders } from "@/__tests__/test-utils";
 
 const mockOnSubmit = jest.fn();
 
@@ -14,18 +15,18 @@ describe("UrlInputForm", () => {
   });
 
   it("renders URL input field", () => {
-    render(<UrlInputForm onSubmit={mockOnSubmit} isLoading={false} />);
+    renderWithProviders(<UrlInputForm onSubmit={mockOnSubmit} isLoading={false} />);
     expect(screen.getByLabelText(/文档网址/)).toBeInTheDocument();
   });
 
   it("renders submit button", () => {
-    render(<UrlInputForm onSubmit={mockOnSubmit} isLoading={false} />);
+    renderWithProviders(<UrlInputForm onSubmit={mockOnSubmit} isLoading={false} />);
     expect(screen.getByRole("button", { name: /开始抓取/ })).toBeInTheDocument();
   });
 
   it("calls onSubmit with URL when form is submitted", async () => {
     const user = userEvent.setup();
-    render(<UrlInputForm onSubmit={mockOnSubmit} isLoading={false} />);
+    renderWithProviders(<UrlInputForm onSubmit={mockOnSubmit} isLoading={false} />);
 
     const input = screen.getByLabelText(/文档网址/);
     await user.type(input, "https://example.com/docs");
@@ -35,13 +36,13 @@ describe("UrlInputForm", () => {
   });
 
   it("disables submit button when loading", () => {
-    render(<UrlInputForm onSubmit={mockOnSubmit} isLoading={true} />);
+    renderWithProviders(<UrlInputForm onSubmit={mockOnSubmit} isLoading={true} />);
     expect(screen.getByRole("button", { name: /正在抓取/ })).toBeDisabled();
   });
 
   it("shows validation error for empty URL", async () => {
     const user = userEvent.setup();
-    render(<UrlInputForm onSubmit={mockOnSubmit} isLoading={false} />);
+    renderWithProviders(<UrlInputForm onSubmit={mockOnSubmit} isLoading={false} />);
 
     await user.click(screen.getByRole("button", { name: /开始抓取/ }));
 
@@ -50,7 +51,7 @@ describe("UrlInputForm", () => {
 
   it("shows validation error for invalid URL", async () => {
     const user = userEvent.setup();
-    render(<UrlInputForm onSubmit={mockOnSubmit} isLoading={false} />);
+    renderWithProviders(<UrlInputForm onSubmit={mockOnSubmit} isLoading={false} />);
 
     const input = screen.getByLabelText(/文档网址/);
     await user.type(input, "not-a-valid-url");
@@ -61,14 +62,14 @@ describe("UrlInputForm", () => {
   });
 
   it("renders max pages input", () => {
-    render(<UrlInputForm onSubmit={mockOnSubmit} isLoading={false} />);
+    renderWithProviders(<UrlInputForm onSubmit={mockOnSubmit} isLoading={false} />);
     const inputs = screen.getAllByRole("spinbutton");
     expect(inputs.length).toBeGreaterThan(0);
   });
 
   it("submits with custom max pages", async () => {
     const user = userEvent.setup();
-    render(<UrlInputForm onSubmit={mockOnSubmit} isLoading={false} />);
+    renderWithProviders(<UrlInputForm onSubmit={mockOnSubmit} isLoading={false} />);
 
     const urlInput = screen.getByLabelText(/文档网址/);
     await user.type(urlInput, "https://example.com/docs");
@@ -84,7 +85,7 @@ describe("UrlInputForm", () => {
 
   it("shows advanced options when toggle is clicked", async () => {
     const user = userEvent.setup();
-    render(<UrlInputForm onSubmit={mockOnSubmit} isLoading={false} />);
+    renderWithProviders(<UrlInputForm onSubmit={mockOnSubmit} isLoading={false} />);
 
     expect(screen.queryByLabelText(/范围路径/)).not.toBeInTheDocument();
 
@@ -95,7 +96,7 @@ describe("UrlInputForm", () => {
 
   it("submits with scope path when provided", async () => {
     const user = userEvent.setup();
-    render(<UrlInputForm onSubmit={mockOnSubmit} isLoading={false} />);
+    renderWithProviders(<UrlInputForm onSubmit={mockOnSubmit} isLoading={false} />);
 
     const urlInput = screen.getByLabelText(/文档网址/);
     await user.type(urlInput, "https://example.com/docs");
@@ -111,5 +112,14 @@ describe("UrlInputForm", () => {
       expect.any(Number),
       "/docs/claude-code"
     );
+  });
+
+  it("renders English labels when locale is en", () => {
+    renderWithProviders(
+      <UrlInputForm onSubmit={mockOnSubmit} isLoading={false} />,
+      { locale: "en" },
+    );
+    expect(screen.getByLabelText(/Documentation URL/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Start crawling/ })).toBeInTheDocument();
   });
 });

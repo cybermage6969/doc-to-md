@@ -1,5 +1,7 @@
 "use client";
 
+import { useLocale } from "@/i18n";
+
 interface ErrorDisplayProps {
   error: string | null;
 }
@@ -9,6 +11,8 @@ interface ErrorDisplayProps {
  * Renders nothing if error is null or empty.
  */
 export function ErrorDisplay({ error }: ErrorDisplayProps) {
+  const { t } = useLocale();
+
   if (!error) return null;
 
   return (
@@ -30,7 +34,7 @@ export function ErrorDisplay({ error }: ErrorDisplayProps) {
         />
       </svg>
       <div>
-        <span className="font-medium">错误：</span>
+        <span className="font-medium">{t("errorPrefix")}</span>
         {error}
       </div>
     </div>

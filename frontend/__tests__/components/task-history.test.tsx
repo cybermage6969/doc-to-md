@@ -2,13 +2,14 @@
  * Tests for TaskHistory component.
  */
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { TaskHistory } from "@/components/task-history";
+import { renderWithProviders } from "@/__tests__/test-utils";
 import type { CompletedTask } from "@/types";
 
 describe("TaskHistory", () => {
   it("renders nothing when tasks array is empty", () => {
-    const { container } = render(<TaskHistory tasks={[]} />);
+    const { container } = renderWithProviders(<TaskHistory tasks={[]} />);
     expect(container.firstChild).toBeNull();
   });
 
@@ -21,7 +22,7 @@ describe("TaskHistory", () => {
         completedAt: new Date("2026-03-04T10:00:00Z"),
       },
     ];
-    render(<TaskHistory tasks={tasks} />);
+    renderWithProviders(<TaskHistory tasks={tasks} />);
     expect(screen.getByText(/历史任务/)).toBeInTheDocument();
   });
 
@@ -34,7 +35,7 @@ describe("TaskHistory", () => {
         completedAt: new Date("2026-03-04T10:00:00Z"),
       },
     ];
-    render(<TaskHistory tasks={tasks} />);
+    renderWithProviders(<TaskHistory tasks={tasks} />);
     expect(
       screen.getByText(/docs\.example\.com/)
     ).toBeInTheDocument();
@@ -49,7 +50,7 @@ describe("TaskHistory", () => {
         completedAt: new Date("2026-03-04T10:00:00Z"),
       },
     ];
-    render(<TaskHistory tasks={tasks} />);
+    renderWithProviders(<TaskHistory tasks={tasks} />);
     const link = screen.getByRole("link", { name: /MD/ });
     expect(link).toHaveAttribute(
       "href",
@@ -66,7 +67,7 @@ describe("TaskHistory", () => {
         completedAt: new Date("2026-03-04T10:30:00Z"),
       },
     ];
-    render(<TaskHistory tasks={tasks} />);
+    renderWithProviders(<TaskHistory tasks={tasks} />);
     const timeEl = screen.getByText(
       new Date("2026-03-04T10:30:00Z").toLocaleTimeString()
     );
@@ -89,7 +90,7 @@ describe("TaskHistory", () => {
         completedAt: new Date("2026-03-04T11:00:00Z"),
       },
     ];
-    render(<TaskHistory tasks={tasks} />);
+    renderWithProviders(<TaskHistory tasks={tasks} />);
     const links = screen.getAllByRole("link", { name: /MD/ });
     expect(links).toHaveLength(2);
 
@@ -97,5 +98,18 @@ describe("TaskHistory", () => {
     const items = screen.getAllByRole("listitem");
     expect(items[0]).toHaveTextContent(/new-docs\.example\.com/);
     expect(items[1]).toHaveTextContent(/old-docs\.example\.com/);
+  });
+
+  it("shows English heading when locale is en", () => {
+    const tasks: CompletedTask[] = [
+      {
+        taskId: "task-1",
+        url: "https://docs.example.com",
+        downloadUrl: "http://localhost:8000/api/tasks/task-1/download",
+        completedAt: new Date("2026-03-04T10:00:00Z"),
+      },
+    ];
+    renderWithProviders(<TaskHistory tasks={tasks} />, { locale: "en" });
+    expect(screen.getByText(/Task history/)).toBeInTheDocument();
   });
 });

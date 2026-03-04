@@ -4,6 +4,15 @@
 import { renderHook, act } from "@testing-library/react";
 import { useSSEProgress } from "@/hooks/use-sse-progress";
 
+// Mock i18n so the hook can call t() without LocaleProvider
+jest.mock("@/i18n", () => ({
+  useLocale: () => ({
+    locale: "zh" as const,
+    setLocale: jest.fn(),
+    t: (key: string) => key,
+  }),
+}));
+
 // Mock the API client so onopen's getTask poll doesn't make real network calls
 jest.mock("@/lib/api-client", () => ({
   getProgressUrl: (taskId: string) =>

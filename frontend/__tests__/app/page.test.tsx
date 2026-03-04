@@ -3,9 +3,10 @@
  * Tests component integration, state transitions, and user flows.
  */
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Home from "@/app/page";
+import { renderWithProviders } from "@/__tests__/test-utils";
 
 // Mock hooks
 jest.mock("@/hooks/use-crawl-task", () => ({
@@ -54,33 +55,28 @@ beforeEach(() => {
 describe("Home page", () => {
   describe("initial state", () => {
     it("renders the URL input form", () => {
-      render(<Home />);
+      renderWithProviders(<Home />);
       expect(screen.getByLabelText(/文档网址/)).toBeInTheDocument();
     });
 
     it("renders the start button", () => {
-      render(<Home />);
+      renderWithProviders(<Home />);
       expect(screen.getByRole("button", { name: /开始抓取/ })).toBeInTheDocument();
     });
 
     it("does not show crawl progress before task starts", () => {
-      render(<Home />);
+      renderWithProviders(<Home />);
       expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
     });
 
     it("does not show download button before task completes", () => {
-      render(<Home />);
-      const downloadBtn = screen.queryByRole("link", { name: /Download/ });
+      renderWithProviders(<Home />);
+      const downloadBtn = screen.queryByRole("link", { name: /下载/ });
       expect(downloadBtn).not.toBeInTheDocument();
     });
 
-    it("does not show markdown preview before crawl finishes", () => {
-      render(<Home />);
-      expect(screen.queryByText(/Markdown 预览/)).not.toBeInTheDocument();
-    });
-
     it("does not show error initially", () => {
-      render(<Home />);
+      renderWithProviders(<Home />);
       expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     });
   });
@@ -91,7 +87,7 @@ describe("Home page", () => {
         ...defaultCrawlTaskReturn,
         isLoading: true,
       });
-      render(<Home />);
+      renderWithProviders(<Home />);
       expect(screen.getByRole("button", { name: /正在抓取/ })).toBeDisabled();
     });
   });
@@ -115,7 +111,7 @@ describe("Home page", () => {
         progress: { ...defaultProgress, crawled: 3, total: 10 },
         isConnected: true,
       });
-      render(<Home />);
+      renderWithProviders(<Home />);
       expect(screen.getByRole("progressbar")).toBeInTheDocument();
     });
 
@@ -124,12 +120,12 @@ describe("Home page", () => {
         ...defaultCrawlTaskReturn,
         task: activeTask,
       });
-      render(<Home />);
+      renderWithProviders(<Home />);
       expect(mockUseSSEProgress).toHaveBeenCalledWith("task-123");
     });
 
     it("passes null to useSSEProgress when no task", () => {
-      render(<Home />);
+      renderWithProviders(<Home />);
       expect(mockUseSSEProgress).toHaveBeenCalledWith(null);
     });
   });
@@ -140,7 +136,7 @@ describe("Home page", () => {
         ...defaultCrawlTaskReturn,
         error: "Network request failed",
       });
-      render(<Home />);
+      renderWithProviders(<Home />);
       expect(screen.getByRole("alert")).toBeInTheDocument();
       expect(screen.getByText(/Network request failed/)).toBeInTheDocument();
     });
@@ -161,7 +157,7 @@ describe("Home page", () => {
         ...defaultSSEReturn,
         error: "Connection to progress stream failed",
       });
-      render(<Home />);
+      renderWithProviders(<Home />);
       expect(screen.getByRole("alert")).toBeInTheDocument();
     });
   });
@@ -189,8 +185,8 @@ describe("Home page", () => {
           estimatedTokens: 50000,
         },
       });
-      render(<Home />);
-      const downloadLink = screen.getByRole("link", { name: /Download .md/ });
+      renderWithProviders(<Home />);
+      const downloadLink = screen.getByRole("link", { name: /下载 .md/ });
       expect(downloadLink).toBeInTheDocument();
       expect(downloadLink).toHaveAttribute(
         "href",
@@ -211,8 +207,8 @@ describe("Home page", () => {
           downloadZipUrl: "http://localhost:8000/api/tasks/task-789/download/zip",
         },
       });
-      render(<Home />);
-      const zipLink = screen.getByRole("link", { name: /Download .zip/ });
+      renderWithProviders(<Home />);
+      const zipLink = screen.getByRole("link", { name: /下载 .zip/ });
       expect(zipLink).toBeInTheDocument();
       expect(zipLink).toHaveAttribute(
         "href",
@@ -233,7 +229,7 @@ describe("Home page", () => {
           estimatedTokens: 50000,
         },
       });
-      render(<Home />);
+      renderWithProviders(<Home />);
       // Token count appears in both DownloadSection and TaskHistory
       const tokenTexts = screen.getAllByText(/50\.0K/);
       expect(tokenTexts.length).toBeGreaterThanOrEqual(1);
@@ -251,7 +247,7 @@ describe("Home page", () => {
           downloadUrl: "http://localhost:8000/api/tasks/task-789/download",
         },
       });
-      render(<Home />);
+      renderWithProviders(<Home />);
       expect(
         screen.getByRole("button", { name: /新建任务/ })
       ).toBeInTheDocument();
@@ -283,7 +279,7 @@ describe("Home page", () => {
           totalDiscovered: 250,
         },
       });
-      render(<Home />);
+      renderWithProviders(<Home />);
       expect(screen.getByText(/共发现 250 页/)).toBeInTheDocument();
       expect(screen.getByText(/已抓取 100 页/)).toBeInTheDocument();
     });
@@ -304,7 +300,7 @@ describe("Home page", () => {
           totalDiscovered: 50,
         },
       });
-      render(<Home />);
+      renderWithProviders(<Home />);
       expect(screen.queryByText(/达到上限/)).not.toBeInTheDocument();
     });
 
@@ -323,7 +319,7 @@ describe("Home page", () => {
           downloadUrl: "http://localhost:8000/api/tasks/task-trunc/download",
         },
       });
-      render(<Home />);
+      renderWithProviders(<Home />);
       expect(screen.queryByText(/达到上限/)).not.toBeInTheDocument();
     });
   });
@@ -335,7 +331,7 @@ describe("Home page", () => {
         ...defaultCrawlTaskReturn,
         startCrawl: mockStartCrawl,
       });
-      render(<Home />);
+      renderWithProviders(<Home />);
 
       const urlInput = screen.getByLabelText(/文档网址/);
       await userEvent.type(urlInput, "https://docs.example.com");
@@ -369,7 +365,7 @@ describe("Home page", () => {
           downloadUrl: "http://localhost:8000/api/tasks/task-789/download",
         },
       });
-      render(<Home />);
+      renderWithProviders(<Home />);
 
       const resetButton = screen.getByRole("button", { name: /新建任务/ });
       await userEvent.click(resetButton);
@@ -380,7 +376,7 @@ describe("Home page", () => {
 
   describe("task history", () => {
     it("does not show history section initially", () => {
-      render(<Home />);
+      renderWithProviders(<Home />);
       expect(screen.queryByText(/历史任务/)).not.toBeInTheDocument();
     });
 
@@ -411,7 +407,7 @@ describe("Home page", () => {
         },
       });
 
-      render(<Home />);
+      renderWithProviders(<Home />);
 
       // History should show the completed task (it gets added when task completes)
       expect(screen.getByText(/历史任务/)).toBeInTheDocument();
@@ -445,7 +441,7 @@ describe("Home page", () => {
         },
       });
 
-      const { rerender } = render(<Home />);
+      const { rerender } = renderWithProviders(<Home />);
 
       // Click new task button
       const resetButton = screen.getByRole("button", { name: /新建任务/ });
@@ -463,6 +459,14 @@ describe("Home page", () => {
       // History should still show the previous task with its URL
       expect(screen.getByText(/历史任务/)).toBeInTheDocument();
       expect(screen.getByText(/docs\.example\.com/)).toBeInTheDocument();
+    });
+  });
+
+  describe("i18n: English locale", () => {
+    it("renders English labels when locale is en", () => {
+      renderWithProviders(<Home />, { locale: "en" });
+      expect(screen.getByLabelText(/Documentation URL/)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Start crawling/ })).toBeInTheDocument();
     });
   });
 });
