@@ -7,7 +7,7 @@ from task.manager import TaskStatus
 class CreateTaskRequest(BaseModel):
     """Request body for POST /api/tasks."""
     url: str = Field(..., description="Starting URL to crawl")
-    max_pages: int = Field(default=100, ge=1, le=1000, description="Maximum pages to crawl")
+    max_pages: int = Field(default=500, ge=1, le=2000, description="Maximum pages to crawl")
     scope_path: str | None = Field(
         default=None,
         description="Optional path prefix to restrict crawl scope (e.g., '/docs/claude-code')",

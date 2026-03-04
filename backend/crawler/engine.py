@@ -26,6 +26,7 @@ class CrawlResult:
     """Aggregated result of a full crawl."""
     pages: list[PageResult] = field(default_factory=list)
     failed_urls: list[str] = field(default_factory=list)
+    total_discovered: int = 0
 
 
 class CrawlEngine:
@@ -42,7 +43,7 @@ class CrawlEngine:
     def __init__(
         self,
         fetcher,
-        max_pages: int = 100,
+        max_pages: int = 500,
         max_concurrency: int = 5,
         delay_range: tuple[float, float] = (0.0, 0.0),
         scope_path: str | None = None,
@@ -63,7 +64,6 @@ class CrawlEngine:
         self.on_page_discovered: Optional[
             Callable[[int], Union[None, Awaitable[None]]]
         ] = None
-        self.on_page_failed: Optional[Callable[[str, str], None]] = None
 
     async def crawl(self, start_url: str) -> CrawlResult:
         """
@@ -96,8 +96,6 @@ class CrawlEngine:
 
             if page_result is None:
                 result.failed_urls.append(url)
-                if self.on_page_failed:
-                    self.on_page_failed(url, "fetch failed")
                 continue
 
             result.pages.append(page_result)
@@ -129,6 +127,7 @@ class CrawlEngine:
                     if asyncio.iscoroutine(result_or_coro):
                         await result_or_coro
 
+        result.total_discovered = url_filter.visited_count
         return result
 
     async def _fetch_page(

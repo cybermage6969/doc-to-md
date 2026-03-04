@@ -57,7 +57,7 @@ class TestCreateTask:
         )
         assert response.status_code == 201
         data = response.json()
-        assert data["max_pages"] == 100
+        assert data["max_pages"] == 500
 
     def test_rejects_invalid_url_scheme(self, client, task_manager):
         response = client.post(

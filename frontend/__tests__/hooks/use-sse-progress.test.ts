@@ -150,6 +150,87 @@ describe("useSSEProgress", () => {
     expect(MockEventSource.instances).toHaveLength(2);
   });
 
+  it("resets progress and error when taskId becomes null", () => {
+    const { result, rerender } = renderHook(
+      ({ taskId }) => useSSEProgress(taskId),
+      { initialProps: { taskId: "task-1" as string | null } }
+    );
+
+    // Simulate a completed task
+    act(() => {
+      MockEventSource.instances[0].simulateMessage({
+        type: "task_completed",
+        total_pages: 10,
+        download_url: "/api/tasks/task-1/download",
+      });
+    });
+
+    expect(result.current.progress.downloadUrl).toBeDefined();
+    expect(result.current.progress.phase).toBe("completed");
+
+    // Reset taskId to null (user clicks "新建任务")
+    rerender({ taskId: null });
+
+    expect(result.current.progress.phase).toBe("crawling");
+    expect(result.current.progress.downloadUrl).toBeUndefined();
+    expect(result.current.progress.crawled).toBe(0);
+    expect(result.current.progress.total).toBe(0);
+    expect(result.current.error).toBeNull();
+    expect(result.current.isConnected).toBe(false);
+  });
+
+  it("resets progress and error when taskId changes to a new task", () => {
+    const { result, rerender } = renderHook(
+      ({ taskId }) => useSSEProgress(taskId),
+      { initialProps: { taskId: "task-1" as string | null } }
+    );
+
+    // Simulate progress on first task
+    act(() => {
+      MockEventSource.instances[0].simulateMessage({
+        type: "page_crawled",
+        crawled: 5,
+        total: 20,
+        url: "https://example.com/page5",
+        title: "Page 5",
+        status: "success",
+      });
+    });
+
+    expect(result.current.progress.crawled).toBe(5);
+
+    // Switch to a new task
+    rerender({ taskId: "task-2" });
+
+    expect(result.current.progress.crawled).toBe(0);
+    expect(result.current.progress.total).toBe(0);
+    expect(result.current.progress.phase).toBe("crawling");
+    expect(result.current.error).toBeNull();
+  });
+
+  it("clears previous error when taskId becomes null", () => {
+    const { result, rerender } = renderHook(
+      ({ taskId }) => useSSEProgress(taskId),
+      { initialProps: { taskId: "task-1" as string | null } }
+    );
+
+    // Simulate a failed task
+    act(() => {
+      MockEventSource.instances[0].simulateMessage({
+        type: "task_failed",
+        error: "Crawl timed out",
+      });
+    });
+
+    expect(result.current.error).toBe("Crawl timed out");
+
+    // Reset taskId to null
+    rerender({ taskId: null });
+
+    expect(result.current.error).toBeNull();
+    expect(result.current.progress.phase).toBe("crawling");
+  });
+
   it("does NOT set error immediately on EventSource drop", () => {
     const { result } = renderHook(() => useSSEProgress("task-123"));
 
@@ -221,6 +302,35 @@ describe("useSSEProgress", () => {
     expect(result.current.progress.downloadUrl).toBe(
       "http://localhost:8000/api/tasks/task-123/download"
     );
+  });
+
+  it("parses totalDiscovered from task_completed event", () => {
+    const { result } = renderHook(() => useSSEProgress("task-123"));
+
+    act(() => {
+      MockEventSource.instances[0].simulateMessage({
+        type: "task_completed",
+        total_pages: 10,
+        download_url: "/api/tasks/task-123/download",
+        total_discovered: 50,
+      });
+    });
+
+    expect(result.current.progress.totalDiscovered).toBe(50);
+  });
+
+  it("totalDiscovered is undefined when not provided in task_completed", () => {
+    const { result } = renderHook(() => useSSEProgress("task-123"));
+
+    act(() => {
+      MockEventSource.instances[0].simulateMessage({
+        type: "task_completed",
+        total_pages: 10,
+        download_url: "/api/tasks/task-123/download",
+      });
+    });
+
+    expect(result.current.progress.totalDiscovered).toBeUndefined();
   });
 
   it("closes source after task_completed to prevent unnecessary reconnects", () => {

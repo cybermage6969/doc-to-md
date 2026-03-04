@@ -64,6 +64,7 @@ export function useSSEProgress(taskId: string | null): UseSSEProgressReturn {
             crawled: event.total_pages,
             total: event.total_pages,
             downloadUrl: `${API_BASE_URL}${event.download_url}`,
+            totalDiscovered: event.total_discovered,
           };
         default:
           return prev;
@@ -83,6 +84,10 @@ export function useSSEProgress(taskId: string | null): UseSSEProgressReturn {
     }
     taskDoneRef.current = false;
     didDisconnectRef.current = false;
+
+    // Reset state unconditionally (covers both null and new taskId)
+    setProgress(DEFAULT_PROGRESS);
+    setError(null);
 
     if (!taskId) {
       setIsConnected(false);

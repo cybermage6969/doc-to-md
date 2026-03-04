@@ -168,6 +168,65 @@ class TestCrawlEngineErrorHandling:
         assert len(result.failed_urls) >= 1
 
 
+class TestCrawlResultTotalDiscovered:
+    """Test total_discovered field on CrawlResult."""
+
+    @pytest.mark.asyncio
+    async def test_total_discovered_equals_visited_count(self):
+        """CrawlResult.total_discovered should equal url_filter.visited_count."""
+        pages_html = {
+            "https://example.com/docs/start": (
+                '<html><body><main>'
+                '<a href="/docs/p1">P1</a>'
+                '<a href="/docs/p2">P2</a>'
+                '<a href="/docs/p3">P3</a>'
+                '</main></body></html>',
+                200,
+            ),
+        }
+
+        async def mock_fetch(url: str):
+            return pages_html.get(
+                url, ("<html><body><main>Content</main></body></html>", 200)
+            )
+
+        fetcher = MagicMock()
+        fetcher.fetch = AsyncMock(side_effect=mock_fetch)
+
+        engine = CrawlEngine(fetcher=fetcher, max_pages=10)
+        result = await engine.crawl("https://example.com/docs/start")
+        # start + p1 + p2 + p3 = 4 visited
+        assert result.total_discovered == 4
+
+    @pytest.mark.asyncio
+    async def test_total_discovered_exceeds_pages_when_truncated(self):
+        """When max_pages truncates, total_discovered should exceed len(pages)."""
+        page_count = [0]
+
+        async def mock_fetch(url: str):
+            page_num = page_count[0]
+            page_count[0] += 1
+            links = "".join(
+                f'<a href="/docs/page{page_num * 5 + i}">P</a>'
+                for i in range(5)
+            )
+            return (f"<html><body><main>{links}</main></body></html>", 200)
+
+        fetcher = MagicMock()
+        fetcher.fetch = AsyncMock(side_effect=mock_fetch)
+
+        engine = CrawlEngine(fetcher=fetcher, max_pages=3)
+        result = await engine.crawl("https://example.com/docs/start")
+        assert len(result.pages) <= 3
+        assert result.total_discovered > len(result.pages)
+
+    @pytest.mark.asyncio
+    async def test_total_discovered_defaults_to_zero(self):
+        """CrawlResult should default total_discovered to 0."""
+        result = CrawlResult()
+        assert result.total_discovered == 0
+
+
 class TestProgressCallbacks:
     """Test progress event callbacks."""
 

@@ -66,10 +66,18 @@ class ProgressEvent:
         )
 
     @classmethod
-    def task_completed(cls, total_pages: int, download_url: str) -> "ProgressEvent":
+    def task_completed(
+        cls,
+        total_pages: int,
+        download_url: str,
+        total_discovered: int | None = None,
+    ) -> "ProgressEvent":
+        data: dict = {"total_pages": total_pages, "download_url": download_url}
+        if total_discovered is not None:
+            data["total_discovered"] = total_discovered
         return cls(
             type=ProgressEventType.TASK_COMPLETED,
-            data={"total_pages": total_pages, "download_url": download_url},
+            data=data,
         )
 
     @classmethod

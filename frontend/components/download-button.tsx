@@ -1,16 +1,9 @@
 "use client";
 
+import { isSafeDownloadUrl } from "@/lib/url-utils";
+
 interface DownloadButtonProps {
   downloadUrl: string | null;
-}
-
-/** Allow only relative /api/ paths or explicit http/https URLs to prevent javascript: injection. */
-function isSafeDownloadUrl(url: string): boolean {
-  return (
-    url.startsWith("/api/") ||
-    url.startsWith("https://") ||
-    url.startsWith("http://")
-  );
 }
 
 /**

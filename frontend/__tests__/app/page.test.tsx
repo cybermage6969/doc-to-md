@@ -215,6 +215,76 @@ describe("Home page", () => {
     });
   });
 
+  describe("truncation notice", () => {
+    const completedTask: CrawlTask = {
+      task_id: "task-trunc",
+      url: "https://docs.example.com",
+      status: "completed",
+      max_pages: 100,
+      has_result: true,
+    };
+
+    it("shows truncation notice when totalDiscovered > total", () => {
+      mockUseCrawlTask.mockReturnValue({
+        ...defaultCrawlTaskReturn,
+        task: completedTask,
+      });
+      mockUseSSEProgress.mockReturnValue({
+        ...defaultSSEReturn,
+        progress: {
+          ...defaultProgress,
+          phase: "completed",
+          crawled: 100,
+          total: 100,
+          downloadUrl: "http://localhost:8000/api/tasks/task-trunc/download",
+          totalDiscovered: 250,
+        },
+      });
+      render(<Home />);
+      expect(screen.getByText(/共发现 250 页/)).toBeInTheDocument();
+      expect(screen.getByText(/已抓取 100 页/)).toBeInTheDocument();
+    });
+
+    it("does not show truncation notice when totalDiscovered equals total", () => {
+      mockUseCrawlTask.mockReturnValue({
+        ...defaultCrawlTaskReturn,
+        task: completedTask,
+      });
+      mockUseSSEProgress.mockReturnValue({
+        ...defaultSSEReturn,
+        progress: {
+          ...defaultProgress,
+          phase: "completed",
+          crawled: 50,
+          total: 50,
+          downloadUrl: "http://localhost:8000/api/tasks/task-trunc/download",
+          totalDiscovered: 50,
+        },
+      });
+      render(<Home />);
+      expect(screen.queryByText(/达到上限/)).not.toBeInTheDocument();
+    });
+
+    it("does not show truncation notice when totalDiscovered is undefined", () => {
+      mockUseCrawlTask.mockReturnValue({
+        ...defaultCrawlTaskReturn,
+        task: completedTask,
+      });
+      mockUseSSEProgress.mockReturnValue({
+        ...defaultSSEReturn,
+        progress: {
+          ...defaultProgress,
+          phase: "completed",
+          crawled: 50,
+          total: 50,
+          downloadUrl: "http://localhost:8000/api/tasks/task-trunc/download",
+        },
+      });
+      render(<Home />);
+      expect(screen.queryByText(/达到上限/)).not.toBeInTheDocument();
+    });
+  });
+
   describe("form submission", () => {
     it("calls startCrawl with URL and maxPages when form is submitted", async () => {
       const mockStartCrawl = jest.fn();
@@ -262,6 +332,94 @@ describe("Home page", () => {
       await userEvent.click(resetButton);
 
       expect(mockReset).toHaveBeenCalled();
+    });
+  });
+
+  describe("task history", () => {
+    it("does not show history section initially", () => {
+      render(<Home />);
+      expect(screen.queryByText(/历史任务/)).not.toBeInTheDocument();
+    });
+
+    it("shows completed task in history when task is complete", () => {
+      const mockReset = jest.fn();
+      const completedTask: CrawlTask = {
+        task_id: "task-789",
+        url: "https://docs.example.com",
+        status: "completed",
+        max_pages: 100,
+        has_result: true,
+      };
+
+      // Start with a completed task
+      mockUseCrawlTask.mockReturnValue({
+        ...defaultCrawlTaskReturn,
+        task: completedTask,
+        reset: mockReset,
+      });
+      mockUseSSEProgress.mockReturnValue({
+        ...defaultSSEReturn,
+        progress: {
+          ...defaultProgress,
+          phase: "completed",
+          crawled: 10,
+          total: 10,
+          downloadUrl: "http://localhost:8000/api/tasks/task-789/download",
+        },
+      });
+
+      render(<Home />);
+
+      // History should show the completed task (it gets added when task completes)
+      expect(screen.getByText(/历史任务/)).toBeInTheDocument();
+      expect(screen.getByText(/docs\.example\.com/)).toBeInTheDocument();
+    });
+
+    it("preserves history across reset cycles", async () => {
+      const mockReset = jest.fn();
+      const completedTask: CrawlTask = {
+        task_id: "task-789",
+        url: "https://docs.example.com",
+        status: "completed",
+        max_pages: 100,
+        has_result: true,
+      };
+
+      // Completed task state
+      mockUseCrawlTask.mockReturnValue({
+        ...defaultCrawlTaskReturn,
+        task: completedTask,
+        reset: mockReset,
+      });
+      mockUseSSEProgress.mockReturnValue({
+        ...defaultSSEReturn,
+        progress: {
+          ...defaultProgress,
+          phase: "completed",
+          crawled: 10,
+          total: 10,
+          downloadUrl: "http://localhost:8000/api/tasks/task-789/download",
+        },
+      });
+
+      const { rerender } = render(<Home />);
+
+      // Click new task button
+      const resetButton = screen.getByRole("button", { name: /新建任务/ });
+      await userEvent.click(resetButton);
+
+      // Simulate reset state (task is null again)
+      mockUseCrawlTask.mockReturnValue({
+        ...defaultCrawlTaskReturn,
+        task: null,
+        reset: mockReset,
+      });
+      mockUseSSEProgress.mockReturnValue(defaultSSEReturn);
+      rerender(<Home />);
+
+      // History should still show the previous task with its URL
+      expect(screen.getByText(/历史任务/)).toBeInTheDocument();
+      expect(screen.getByText(/docs\.example\.com/)).toBeInTheDocument();
     });
   });
 });

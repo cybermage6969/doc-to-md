@@ -267,6 +267,7 @@ async def _run_crawl_task(task_id: str, manager: TaskManager) -> None:
             ProgressEvent.task_completed(
                 total_pages=len(pages_data),
                 download_url=f"/api/tasks/{task_id}/download",
+                total_discovered=crawl_result.total_discovered,
             ),
         )
 

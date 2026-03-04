@@ -28,7 +28,7 @@ class CrawlTask:
     task_id: str
     url: str
     status: TaskStatus = TaskStatus.PENDING
-    max_pages: int = 100
+    max_pages: int = 500
     scope_path: Optional[str] = None
     error: Optional[str] = None
     result_markdown: Optional[str] = None
@@ -54,7 +54,7 @@ class TaskManager:
     def create_task(
         self,
         url: str,
-        max_pages: int = 100,
+        max_pages: int = 500,
         scope_path: Optional[str] = None,
     ) -> CrawlTask:
         """Create and store a new crawl task.

@@ -48,6 +48,7 @@ export interface TaskCompletedEvent {
   type: "task_completed";
   total_pages: number;
   download_url: string;
+  total_discovered?: number;
 }
 
 export interface TaskFailedEvent {
@@ -63,6 +64,13 @@ export type ProgressEvent =
   | TaskCompletedEvent
   | TaskFailedEvent;
 
+export interface CompletedTask {
+  taskId: string;
+  url: string;
+  downloadUrl: string;
+  completedAt: Date;
+}
+
 export interface CrawlProgress {
   phase: string;
   crawled: number;
@@ -70,4 +78,5 @@ export interface CrawlProgress {
   currentUrl: string;
   currentTitle: string;
   downloadUrl?: string;
+  totalDiscovered?: number;
 }
