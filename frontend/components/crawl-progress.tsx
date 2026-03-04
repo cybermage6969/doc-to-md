@@ -11,6 +11,7 @@ const PHASE_LABELS: Record<string, string> = {
   crawling: "抓取中",
   converting: "转换中",
   merging: "合并中",
+  completed: "已完成",
 };
 
 /**
