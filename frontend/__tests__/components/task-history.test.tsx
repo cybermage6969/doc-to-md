@@ -50,7 +50,7 @@ describe("TaskHistory", () => {
       },
     ];
     render(<TaskHistory tasks={tasks} />);
-    const link = screen.getByRole("link", { name: /下载/ });
+    const link = screen.getByRole("link", { name: /MD/ });
     expect(link).toHaveAttribute(
       "href",
       "http://localhost:8000/api/tasks/task-1/download"
@@ -90,7 +90,7 @@ describe("TaskHistory", () => {
       },
     ];
     render(<TaskHistory tasks={tasks} />);
-    const links = screen.getAllByRole("link", { name: /下载/ });
+    const links = screen.getAllByRole("link", { name: /MD/ });
     expect(links).toHaveLength(2);
 
     // Newest task (task-2) should appear first

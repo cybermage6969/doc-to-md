@@ -34,3 +34,4 @@ class TaskResponse(BaseModel):
     max_pages: int
     error: Optional[str] = None
     has_result: bool = False
+    estimated_tokens: int | None = None

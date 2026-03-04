@@ -5,7 +5,7 @@ import { useCrawlTask } from "@/hooks/use-crawl-task";
 import { useSSEProgress } from "@/hooks/use-sse-progress";
 import { UrlInputForm } from "@/components/url-input-form";
 import { CrawlProgress } from "@/components/crawl-progress";
-import { DownloadButton } from "@/components/download-button";
+import { DownloadSection } from "@/components/download-section";
 import { ErrorDisplay } from "@/components/error-display";
 import { TaskHistory } from "@/components/task-history";
 import type { CompletedTask } from "@/types";
@@ -17,7 +17,7 @@ import type { CompletedTask } from "@/types";
  *  1. User submits a URL via UrlInputForm
  *  2. useCrawlTask creates the backend task
  *  3. useSSEProgress streams real-time progress
- *  4. On completion, DownloadButton becomes available for download
+ *  4. On completion, DownloadSection shows token count and dual download buttons
  *  5. Completed tasks are stored in memory for history access
  */
 export default function Home() {
@@ -47,11 +47,14 @@ export default function Home() {
           taskId: task.task_id,
           url: task.url,
           downloadUrl: progress.downloadUrl!,
+          downloadZipUrl: progress.downloadZipUrl,
+          estimatedTokens: progress.estimatedTokens,
+          zipParts: progress.zipParts,
           completedAt: new Date(),
         },
       ];
     });
-  }, [task, progress.downloadUrl]);
+  }, [task, progress.downloadUrl, progress.downloadZipUrl, progress.estimatedTokens, progress.zipParts]); // eslint-disable-line react-hooks/exhaustive-deps -- dedup guard makes extra fires safe
 
   return (
     <div className="space-y-6">
@@ -74,7 +77,7 @@ export default function Home() {
 
       {/* Completed task actions */}
       {isTaskDone && (
-        <div className="flex items-center gap-3">
+        <div className="space-y-4">
           {progress.downloadUrl && (
             <div className="flex flex-col gap-1">
               <span className="flex items-center gap-1.5 text-sm text-emerald-600">
@@ -102,7 +105,12 @@ export default function Home() {
                 )}
             </div>
           )}
-          <DownloadButton downloadUrl={progress.downloadUrl ?? null} />
+          <DownloadSection
+            downloadUrl={progress.downloadUrl ?? null}
+            downloadZipUrl={progress.downloadZipUrl ?? null}
+            estimatedTokens={progress.estimatedTokens ?? null}
+            zipParts={progress.zipParts ?? null}
+          />
           <button
             type="button"
             onClick={reset}

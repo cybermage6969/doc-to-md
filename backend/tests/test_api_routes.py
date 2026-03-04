@@ -169,6 +169,77 @@ class TestDownloadResult:
         assert response.status_code == 409
 
 
+class TestDownloadZip:
+    """Test GET /api/tasks/{task_id}/download/zip endpoint."""
+
+    def test_downloads_zip_for_completed_task(self, client, task_manager):
+        from merger.doc_merger import PageData
+        task = task_manager.create_task("https://example.com/docs")
+        pages = [
+            PageData(url="https://example.com/intro", title="Intro", content="Content", order=0),
+        ]
+        task_manager.set_result(task.task_id, "# Docs", pages=pages, estimated_tokens=100)
+        task_manager.update_status(task.task_id, TaskStatus.COMPLETED)
+        response = client.get(f"/api/tasks/{task.task_id}/download/zip")
+        assert response.status_code == 200
+
+    def test_zip_returns_correct_content_type(self, client, task_manager):
+        from merger.doc_merger import PageData
+        task = task_manager.create_task("https://example.com/docs")
+        pages = [
+            PageData(url="https://example.com/intro", title="Intro", content="Content", order=0),
+        ]
+        task_manager.set_result(task.task_id, "# Docs", pages=pages, estimated_tokens=100)
+        task_manager.update_status(task.task_id, TaskStatus.COMPLETED)
+        response = client.get(f"/api/tasks/{task.task_id}/download/zip")
+        assert "application/zip" in response.headers["content-type"]
+
+    def test_zip_includes_content_disposition(self, client, task_manager):
+        from merger.doc_merger import PageData
+        task = task_manager.create_task("https://example.com/docs")
+        pages = [
+            PageData(url="https://example.com/intro", title="Intro", content="Content", order=0),
+        ]
+        task_manager.set_result(task.task_id, "# Docs", pages=pages, estimated_tokens=100)
+        task_manager.update_status(task.task_id, TaskStatus.COMPLETED)
+        response = client.get(f"/api/tasks/{task.task_id}/download/zip")
+        assert "attachment" in response.headers["content-disposition"]
+        assert ".zip" in response.headers["content-disposition"]
+
+    def test_zip_returns_404_for_nonexistent_task(self, client, task_manager):
+        response = client.get("/api/tasks/nonexistent/download/zip")
+        assert response.status_code == 404
+
+    def test_zip_returns_409_when_task_not_completed(self, client, task_manager):
+        task = task_manager.create_task("https://example.com/docs")
+        response = client.get(f"/api/tasks/{task.task_id}/download/zip")
+        assert response.status_code == 409
+
+    def test_zip_returns_404_when_no_pages(self, client, task_manager):
+        task = task_manager.create_task("https://example.com/docs")
+        task_manager.set_result(task.task_id, "# Docs")
+        task_manager.update_status(task.task_id, TaskStatus.COMPLETED)
+        response = client.get(f"/api/tasks/{task.task_id}/download/zip")
+        assert response.status_code == 404
+
+
+class TestGetTaskEstimatedTokens:
+    """Test that GET /api/tasks/{task_id} returns estimated_tokens."""
+
+    def test_returns_estimated_tokens_when_set(self, client, task_manager):
+        task = task_manager.create_task("https://example.com/docs")
+        task_manager.set_result(task.task_id, "# Docs", estimated_tokens=5000)
+        response = client.get(f"/api/tasks/{task.task_id}")
+        data = response.json()
+        assert data["estimated_tokens"] == 5000
+
+    def test_returns_null_estimated_tokens_when_not_set(self, client, task_manager):
+        task = task_manager.create_task("https://example.com/docs")
+        response = client.get(f"/api/tasks/{task.task_id}")
+        data = response.json()
+        assert data["estimated_tokens"] is None
+
+
 class TestHealthCheck:
     """Test health check endpoint."""
 

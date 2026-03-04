@@ -333,6 +333,88 @@ describe("useSSEProgress", () => {
     expect(result.current.progress.totalDiscovered).toBeUndefined();
   });
 
+  it("parses estimatedTokens from task_completed event", () => {
+    const { result } = renderHook(() => useSSEProgress("task-123"));
+
+    act(() => {
+      MockEventSource.instances[0].simulateMessage({
+        type: "task_completed",
+        total_pages: 10,
+        download_url: "/api/tasks/task-123/download",
+        estimated_tokens: 25000,
+        download_zip_url: "/api/tasks/task-123/download/zip",
+      });
+    });
+
+    expect(result.current.progress.estimatedTokens).toBe(25000);
+  });
+
+  it("parses downloadZipUrl from task_completed event", () => {
+    const { result } = renderHook(() => useSSEProgress("task-123"));
+
+    act(() => {
+      MockEventSource.instances[0].simulateMessage({
+        type: "task_completed",
+        total_pages: 10,
+        download_url: "/api/tasks/task-123/download",
+        download_zip_url: "/api/tasks/task-123/download/zip",
+      });
+    });
+
+    expect(result.current.progress.downloadZipUrl).toBe(
+      "http://localhost:8000/api/tasks/task-123/download/zip"
+    );
+  });
+
+  it("downloadZipUrl is undefined when not in task_completed", () => {
+    const { result } = renderHook(() => useSSEProgress("task-123"));
+
+    act(() => {
+      MockEventSource.instances[0].simulateMessage({
+        type: "task_completed",
+        total_pages: 10,
+        download_url: "/api/tasks/task-123/download",
+      });
+    });
+
+    expect(result.current.progress.downloadZipUrl).toBeUndefined();
+  });
+
+  it("parses zipParts from task_completed event", () => {
+    const { result } = renderHook(() => useSSEProgress("task-123"));
+
+    const zipParts = [
+      { filename: "part-001.md", page_count: 10, estimated_tokens: 78000 },
+      { filename: "part-002.md", page_count: 5, estimated_tokens: 42000 },
+    ];
+
+    act(() => {
+      MockEventSource.instances[0].simulateMessage({
+        type: "task_completed",
+        total_pages: 15,
+        download_url: "/api/tasks/task-123/download",
+        download_zip_url: "/api/tasks/task-123/download/zip",
+        zip_parts: zipParts,
+      });
+    });
+
+    expect(result.current.progress.zipParts).toEqual(zipParts);
+  });
+
+  it("zipParts is undefined when not in task_completed", () => {
+    const { result } = renderHook(() => useSSEProgress("task-123"));
+
+    act(() => {
+      MockEventSource.instances[0].simulateMessage({
+        type: "task_completed",
+        total_pages: 10,
+        download_url: "/api/tasks/task-123/download",
+      });
+    });
+
+    expect(result.current.progress.zipParts).toBeUndefined();
+  });
+
   it("closes source after task_completed to prevent unnecessary reconnects", () => {
     renderHook(() => useSSEProgress("task-123"));
     const source = MockEventSource.instances[0];

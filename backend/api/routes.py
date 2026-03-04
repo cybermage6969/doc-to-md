@@ -14,8 +14,10 @@ from converter.html_to_md import HtmlToMarkdown
 from crawler.engine import CrawlEngine
 from crawler.page_fetcher import PageFetcher
 from merger.doc_merger import DocMerger, PageData
+from merger.zip_builder import build_split_zip, compute_zip_parts
 from task.manager import TaskManager, TaskStatus
 from task.progress import ProgressEvent
+from utils.token_estimator import estimate_tokens
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +91,7 @@ async def get_task(task_id: str) -> TaskResponse:
         max_pages=task.max_pages,
         error=task.error,
         has_result=task.result_markdown is not None,
+        estimated_tokens=task.estimated_tokens,
     )
 
 
@@ -150,6 +153,39 @@ async def download_result(task_id: str) -> Response:
     return Response(
         content=task.result_markdown,
         media_type="text/markdown",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="{filename}"; '
+                f"filename*=UTF-8''{filename_encoded}"
+            )
+        },
+    )
+
+
+@router.get("/tasks/{task_id}/download/zip")
+async def download_zip(task_id: str) -> Response:
+    """Download the split ZIP archive for a completed task."""
+    manager = get_task_manager()
+    task = manager.get_task(task_id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    if task.status != TaskStatus.COMPLETED:
+        raise HTTPException(status_code=409, detail="Task is not completed yet")
+
+    if not task.result_pages:
+        raise HTTPException(status_code=404, detail="Split result not available")
+
+    doc_title = task.result_pages[0].title
+    zip_bytes = build_split_zip(task.result_pages, doc_title, task.url)
+
+    safe_name = re.sub(r"[^a-zA-Z0-9._-]", "_", task.url.split("//")[-1])[:50]
+    filename = f"{safe_name}.zip"
+    filename_encoded = urllib.parse.quote(filename, safe="")
+
+    return Response(
+        content=zip_bytes,
+        media_type="application/zip",
         headers={
             "Content-Disposition": (
                 f'attachment; filename="{filename}"; '
@@ -259,8 +295,13 @@ async def _run_crawl_task(task_id: str, manager: TaskManager) -> None:
             source_url=task.url,
         )
 
-        manager.set_result(task_id, result_md)
+        token_count = estimate_tokens(result_md)
+        manager.set_result(
+            task_id, result_md, pages=pages_data, estimated_tokens=token_count
+        )
         manager.update_status(task_id, TaskStatus.COMPLETED)
+
+        zip_parts = compute_zip_parts(pages_data)
 
         await manager.publish_event(
             task_id,
@@ -268,6 +309,9 @@ async def _run_crawl_task(task_id: str, manager: TaskManager) -> None:
                 total_pages=len(pages_data),
                 download_url=f"/api/tasks/{task_id}/download",
                 total_discovered=crawl_result.total_discovered,
+                estimated_tokens=token_count,
+                download_zip_url=f"/api/tasks/{task_id}/download/zip",
+                zip_parts=zip_parts,
             ),
         )
 

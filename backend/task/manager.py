@@ -32,6 +32,8 @@ class CrawlTask:
     scope_path: Optional[str] = None
     error: Optional[str] = None
     result_markdown: Optional[str] = None
+    result_pages: list | None = None
+    estimated_tokens: int | None = None
     created_at: float = field(default_factory=time.time)
 
 
@@ -115,10 +117,18 @@ class TaskManager:
             scope_path=task.scope_path,
             error=error,
             result_markdown=task.result_markdown,
+            result_pages=task.result_pages,
+            estimated_tokens=task.estimated_tokens,
             created_at=task.created_at,
         )
 
-    def set_result(self, task_id: str, markdown: str) -> None:
+    def set_result(
+        self,
+        task_id: str,
+        markdown: str,
+        pages: list | None = None,
+        estimated_tokens: int | None = None,
+    ) -> None:
         """Store the final Markdown result for a completed task."""
         task = self._tasks.get(task_id)
         if task is None:
@@ -131,6 +141,8 @@ class TaskManager:
             scope_path=task.scope_path,
             error=task.error,
             result_markdown=markdown,
+            result_pages=pages,
+            estimated_tokens=estimated_tokens,
             created_at=task.created_at,
         )
 

@@ -64,7 +64,12 @@ export function useSSEProgress(taskId: string | null): UseSSEProgressReturn {
             crawled: event.total_pages,
             total: event.total_pages,
             downloadUrl: `${API_BASE_URL}${event.download_url}`,
+            downloadZipUrl: event.download_zip_url
+              ? `${API_BASE_URL}${event.download_zip_url}`
+              : undefined,
+            estimatedTokens: event.estimated_tokens,
             totalDiscovered: event.total_discovered,
+            zipParts: event.zip_parts,
           };
         default:
           return prev;
@@ -119,9 +124,14 @@ export function useSSEProgress(taskId: string | null): UseSSEProgressReturn {
           .then((task) => {
             if (cancelled) return;
             if (task.status === "completed") {
+              // Note: zipParts is not available from the GET endpoint,
+              // so the ZIP preview may be missing after a reconnect.
+              // Downloads still work; only the per-file token preview is cosmetic.
               setProgress((prev) => ({
                 ...prev,
                 downloadUrl: `${API_BASE_URL}/api/tasks/${task.task_id}/download`,
+                downloadZipUrl: `${API_BASE_URL}/api/tasks/${task.task_id}/download/zip`,
+                estimatedTokens: task.estimated_tokens,
               }));
               taskDoneRef.current = true;
               source.close();

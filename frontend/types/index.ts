@@ -11,6 +11,7 @@ export interface CrawlTask {
   max_pages: number;
   error?: string;
   has_result: boolean;
+  estimated_tokens?: number;
 }
 
 export interface CreateTaskRequest {
@@ -44,11 +45,20 @@ export interface PhaseChangedEvent {
   phase: string;
 }
 
+export interface ZipPartInfo {
+  filename: string;
+  page_count: number;
+  estimated_tokens: number;
+}
+
 export interface TaskCompletedEvent {
   type: "task_completed";
   total_pages: number;
   download_url: string;
   total_discovered?: number;
+  estimated_tokens?: number;
+  download_zip_url?: string;
+  zip_parts?: ZipPartInfo[];
 }
 
 export interface TaskFailedEvent {
@@ -68,6 +78,9 @@ export interface CompletedTask {
   taskId: string;
   url: string;
   downloadUrl: string;
+  downloadZipUrl?: string;
+  estimatedTokens?: number;
+  zipParts?: ZipPartInfo[];
   completedAt: Date;
 }
 
@@ -78,5 +91,8 @@ export interface CrawlProgress {
   currentUrl: string;
   currentTitle: string;
   downloadUrl?: string;
+  downloadZipUrl?: string;
+  estimatedTokens?: number;
   totalDiscovered?: number;
+  zipParts?: ZipPartInfo[];
 }

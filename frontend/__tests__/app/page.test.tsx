@@ -3,7 +3,7 @@
  * Tests component integration, state transitions, and user flows.
  */
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Home from "@/app/page";
 
@@ -70,7 +70,7 @@ describe("Home page", () => {
 
     it("does not show download button before task completes", () => {
       render(<Home />);
-      const downloadBtn = screen.queryByRole("link", { name: /下载/ });
+      const downloadBtn = screen.queryByRole("link", { name: /Download/ });
       expect(downloadBtn).not.toBeInTheDocument();
     });
 
@@ -185,15 +185,58 @@ describe("Home page", () => {
         progress: {
           ...defaultProgress,
           downloadUrl: "http://localhost:8000/api/tasks/task-789/download",
+          downloadZipUrl: "http://localhost:8000/api/tasks/task-789/download/zip",
+          estimatedTokens: 50000,
         },
       });
       render(<Home />);
-      const downloadLink = screen.getByRole("link", { name: /下载 Markdown/ });
+      const downloadLink = screen.getByRole("link", { name: /Download .md/ });
       expect(downloadLink).toBeInTheDocument();
       expect(downloadLink).toHaveAttribute(
         "href",
         "http://localhost:8000/api/tasks/task-789/download"
       );
+    });
+
+    it("shows zip download link when task is completed", () => {
+      mockUseCrawlTask.mockReturnValue({
+        ...defaultCrawlTaskReturn,
+        task: completedTask,
+      });
+      mockUseSSEProgress.mockReturnValue({
+        ...defaultSSEReturn,
+        progress: {
+          ...defaultProgress,
+          downloadUrl: "http://localhost:8000/api/tasks/task-789/download",
+          downloadZipUrl: "http://localhost:8000/api/tasks/task-789/download/zip",
+        },
+      });
+      render(<Home />);
+      const zipLink = screen.getByRole("link", { name: /Download .zip/ });
+      expect(zipLink).toBeInTheDocument();
+      expect(zipLink).toHaveAttribute(
+        "href",
+        "http://localhost:8000/api/tasks/task-789/download/zip"
+      );
+    });
+
+    it("shows token count when task is completed", () => {
+      mockUseCrawlTask.mockReturnValue({
+        ...defaultCrawlTaskReturn,
+        task: completedTask,
+      });
+      mockUseSSEProgress.mockReturnValue({
+        ...defaultSSEReturn,
+        progress: {
+          ...defaultProgress,
+          downloadUrl: "http://localhost:8000/api/tasks/task-789/download",
+          estimatedTokens: 50000,
+        },
+      });
+      render(<Home />);
+      // Token count appears in both DownloadSection and TaskHistory
+      const tokenTexts = screen.getAllByText(/50\.0K/);
+      expect(tokenTexts.length).toBeGreaterThanOrEqual(1);
     });
 
     it("shows new task button after task completes", () => {

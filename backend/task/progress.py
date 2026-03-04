@@ -71,10 +71,19 @@ class ProgressEvent:
         total_pages: int,
         download_url: str,
         total_discovered: int | None = None,
+        estimated_tokens: int | None = None,
+        download_zip_url: str | None = None,
+        zip_parts: list | None = None,
     ) -> "ProgressEvent":
         data: dict = {"total_pages": total_pages, "download_url": download_url}
         if total_discovered is not None:
             data["total_discovered"] = total_discovered
+        if estimated_tokens is not None:
+            data["estimated_tokens"] = estimated_tokens
+        if download_zip_url is not None:
+            data["download_zip_url"] = download_zip_url
+        if zip_parts is not None:
+            data["zip_parts"] = zip_parts
         return cls(
             type=ProgressEventType.TASK_COMPLETED,
             data=data,
